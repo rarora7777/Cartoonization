@@ -1,4 +1,4 @@
-function p=meanshift(im, hs, hr)
+function p = meanshift(im, hs, hr)
     [r, c]=size(im);
     f = im;
     new_f_x = zeros(r,c);
@@ -57,5 +57,5 @@ function p=meanshift(im, hs, hr)
             new_f_y(i,j) = l;
         end
     end
-    p=new_f_gray;
+    p = new_f_gray;
 end

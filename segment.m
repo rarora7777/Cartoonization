@@ -1,62 +1,95 @@
-function [res, count] = segment(img, hs, hrSeg)
+function [res, count, numPixels] = segment(img, hrSeg)
     r = size(img, 1);
     c = size(img, 2);
     
     labels = zeros(r, c);
-    count = 0;
+    begi = zeros(r, c);
+    begj = zeros(r, c);
+    count = 1;
+    
+    numPixels = zeros(10000, 1);
+    sumColors = zeros(10000, 3);
+    
+    red = img(: , : ,1);
+    green = img(: , : ,2);
+    blue = img(: , : ,3);
+    
     for i=1:r
+%         mini = i - hs; maxi = i + hs;
+%         
+%         if mini < 1
+%                 mini = 1;
+%         end
+%         if maxi > r
+%             maxi = r;
+%         end
+        
         for j=1:c
             if labels(i, j)==0
                 labels(i, j) = count;
+                numPixels(count) = 1;
+                sumColors(count, :) = img(i, j, :);
                 count = count + 1;
+                begi(i, j) = i; begj(i, j) = j;
+            else
+%                 disp('Skipped');
+                continue;
             end
-            mini = i-hs; maxi = i+hs; minj = j-hs; maxj = j+hs;
-            if mini < 1
-                mini = 1;
-            end
-            if maxi > r
-                maxi = r;
-            end
-            if minj < 1
-                minj = 1;
-            end
-            if maxj > c
-                maxj = c;
-            end
-%             size(repmat(img(i, j, :), [maxi-mini+1, maxj-minj+1]))
-%             size(img(mini:maxi, minj:maxj, :))
-%             er = sum((repmat(img(i, j, :), [maxi-mini+1, maxj-minj+1]) - img(mini:maxi, minj:maxj, :)).^2, 3);
-            er = sum((bsxfun(@minus, img(i, j, :), img(mini:maxi, minj:maxj, :))).^2, 3);
-            er = er<(hrSeg^2);
-%             if min(min(er))==0
-%                 disp(er);
+%             minj = j - hs; maxj = j + hs;
+            
+%             if minj < 1
+%                 minj = 1;
 %             end
-            temp = false(r, c);
-            temp(mini:maxi, minj:maxj) = er;
-            labels(temp) = labels(i, j);
-%             for k = mini:maxi
-%                 for l=minj:maxj
-%                     if abs(norm(squeeze(img(i, j, :)) - squeeze(img(k, l, :)))) < hrSeg
-%                         labels(k,l) = labels(i, j);
-%                     end
-%                 end
+%             if maxj > c
+%                 maxj = c;
 %             end
+
+%             er = sum((bsxfun(@minus, img(begi(i, j), begj(i, j), :), img(mini:maxi, minj:maxj, :))).^2, 3);
+%             er = er<(hrSeg^2);
+%             temp = false(r, c);
+%             temp(mini:maxi, minj:maxj) = er;
+%             labels(temp) = labels(i, j);
+%             begi(temp) = i; begj(temp) = j;
+            oldPixels = 1; newPixels = 0;
+            while(oldPixels~=newPixels)
+                curLabel = labels(i, j);
+                oldPixels = sum(sum(labels==curLabel));
+                curColor = reshape(sumColors(curLabel, :)/oldPixels, [1 1 3]);
+    %             curColor
+    %             tic
+    %             er = sum((bsxfun(@minus, img(begi(i, j), begj(i, j), :), img(:, : , :))).^2, 3);
+                er = sum((bsxfun(@minus, curColor, img(:, : , :))).^2, 3);
+    %             toc
+                er = er<(hrSeg^2);
+                labels(er) = labels(i, j);
+                begi(er) = i; begj(er) = j;
+
+                numPixels(curLabel) = numPixels(curLabel) + sum(sum(er));
+                sumColors(curLabel, 1) = sumColors(curLabel, 1) + sum(red(er));
+                sumColors(curLabel, 2) = sumColors(curLabel, 2) + sum(green(er));
+                sumColors(curLabel, 3) = sumColors(curLabel, 3) + sum(blue(er));
+
+                newPixels = sum(sum(labels==curLabel));
+                
+%                 squeeze(img(i, j, :))'
+%                 sumColors(curLabel, :)/newPixels
+            end
         end
-        i
+%         i
     end
     count = count - 1;
-    res = labels;
-%     for i=1:count
-%         cur = (labels==i);
-%         red = img(:,:,1);
-%         red(cur) = mean(mean(red(cur)));
-%         green = img(:,:,2);
-%         green(cur) = mean(mean(green(cur)));
-%         blue = img(:,:,3);
-%         blue(cur) = mean(mean(blue(cur)));
-%     end
-%     res = zeros(r, c, 3);
-%     res(:, :, 1) = red;
-%     res(:, :, 2) = green;
-%     res(:, :, 3) = blue;
+%     res = labels;
+    
+    for i=1:count
+        cur = (labels==i);
+        red(cur) = mean(red(cur));
+        green(cur) = mean(green(cur));
+        blue(cur) = mean(blue(cur));
+    end
+    
+    res = zeros(r, c, 3);
+    res(:, :, 1) = red;
+    res(:, :, 2) = green;
+    res(:, :, 3) = blue;
+    
 end

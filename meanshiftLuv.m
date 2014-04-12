@@ -48,16 +48,20 @@ function p=meanshiftLuv(im, hs, hr)
                     break;
                 end
             end
-            er = (sum((bsxfun(@minus, f(i,j, :), f(k-hs:k+hs,l-hs:l+hs, :))).^2, 3)) / hr^2;
+            er = ((f(i,j, 1) - f(k-hs:k+hs,l-hs:l+hs, 1)).^2)/hr^2;
             er = double(er<=1);
             tem = er .* f(k-hs:k+hs,l-hs:l+hs, 1);
             tem = tem(tem>0);
             tem = median(tem);
             new_f(i, j, 1) = tem;
+            er = ((f(i,j, 2) - f(k-hs:k+hs,l-hs:l+hs, 2)).^2)/hr^2;
+            er = double(er<=1);
             tem = er .* f(k-hs:k+hs,l-hs:l+hs, 2);
             tem = tem(tem>0);
             tem = median(tem);
             new_f(i, j, 2) = tem;
+            er = ((f(i,j, 3) - f(k-hs:k+hs,l-hs:l+hs, 3)).^2)/hr^2;
+            er = double(er<=1);
             tem = er .* f(k-hs:k+hs,l-hs:l+hs, 3);
             tem = tem(tem>0);
             tem = median(tem);
